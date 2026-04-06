@@ -38,3 +38,8 @@ body {
 .input:focus {
   border-color: #f97316;
 }
+
+.button-secondary:hover {
+  border-color: #f97316;
+  color: #f97316;
+}

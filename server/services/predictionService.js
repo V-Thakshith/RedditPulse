@@ -4,6 +4,10 @@ function normalize(value, min, max) {
   return ((value - min) / (max - min)) * 2 - 1;
 }
 
+function safeNumber(n) {
+  return isNaN(n) ? 0 : n;
+}
+
 // Convert -1/+1 score to 0-100 for display
 function toDisplayScore(score) {
   return Math.round(((score + 1) / 2) * 100);
@@ -34,9 +38,12 @@ function getMentionVelocitySignal(mentions, allResults) {
 // Signal 3 — Price Momentum
 // Cap at ±15% change to avoid outliers like PL (+27%)
 function getPriceMomentumSignal(changePercent) {
-  if (changePercent === null || changePercent === undefined) return 0;
+  if (changePercent === null || changePercent === undefined || isNaN(changePercent)) {
+    return 0;
+  }
+
   const capped = Math.max(-15, Math.min(15, changePercent));
-  return capped / 15; // normalize to -1 to +1
+  return capped / 15;
 }
 
 // Signal 4 — Conviction Score
@@ -84,14 +91,14 @@ export function calculatePredictionScore(result, allResults) {
   const velocityWithDirection = velocitySignal * (finalScore >= 0 ? 1 : -1);
 
   // Weighted combination
-  const combinedScore =
-    (sentimentSignal   * WEIGHTS.sentiment)  +
-    (velocityWithDirection * WEIGHTS.velocity)   +
-    (momentumSignal    * WEIGHTS.momentum)   +
-    (convictionSignal  * WEIGHTS.conviction);
+const combinedScore =
+  safeNumber(sentimentSignal * WEIGHTS.sentiment) +
+  safeNumber(velocityWithDirection * WEIGHTS.velocity) +
+  safeNumber(momentumSignal * WEIGHTS.momentum) +
+  safeNumber(convictionSignal * WEIGHTS.conviction);
 
   // Convert to 0-100 display score
-  const displayScore = toDisplayScore(combinedScore);
+const displayScore = safeNumber(toDisplayScore(combinedScore));
 
   // Generate signal with confidence levels
   let signal, confidence;

@@ -15,14 +15,14 @@ const analysisSchema= new mongoose.Schema({
             neutral: Number
         },
 
-        predictions:{
+        prediction:{
             predictionScore: Number,
             signal: String,
             confidence: String,
             breakdown: mongoose.Schema.Types.Mixed,
         },
 
-        stocks: mongoose.Schema.Types.Mixed,
+        stock: mongoose.Schema.Types.Mixed,
         topPosts: [mongoose.Schema.Types.Mixed],
     }]
 });

@@ -2,10 +2,13 @@
 import { useState } from "react";
 import { loginUser } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+
 
 export default function Login() {
   const { login } = useAuth();
-
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -24,7 +27,7 @@ export default function Login() {
     }
 
     login(res);
-    window.location.reload();
+navigate("/dashboard");
   }
 
   return (
@@ -110,6 +113,23 @@ export default function Login() {
           >
             Login
           </button>
+
+          <div style={{ marginTop: "1rem", textAlign: "center" }}>
+  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+    Don't have an account?{" "}
+  </span>
+  <Link
+    to="/signup"
+    style={{
+      color: "#f97316",
+      fontSize: "0.8rem",
+      fontWeight: 600,
+      textDecoration: "none",
+    }}
+  >
+    Sign up
+  </Link>
+</div>
         </form>
 
         {/* Error */}
