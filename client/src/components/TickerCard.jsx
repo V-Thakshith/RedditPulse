@@ -2,11 +2,18 @@ import { useState } from "react";
 import SignalBadge from "./SignalBadge";
 import ScoreBar from "./ScoreBar";
 import { addToWatchlist, removeFromWatchlist } from "../api";
+
 export default function TickerCard({ result, watchlist, setWatchlist }) {
   const [expanded, setExpanded] = useState(false);
-  const isSaved = watchlist?.includes(result.ticker);
 
-  async function toggleWatchlist() {
+  // ✅ FIX: check inside object array
+  const isSaved = watchlist?.some(
+    (item) => item.ticker === result.ticker
+  );
+
+  async function toggleWatchlist(e) {
+    e.stopPropagation(); // 🔥 prevent card expand on click
+
     let updated;
 
     if (isSaved) {
@@ -17,6 +24,7 @@ export default function TickerCard({ result, watchlist, setWatchlist }) {
 
     setWatchlist(updated);
   }
+
   const { ticker, mentions, prediction, stock, topPosts, sentiments } =
     result || {};
 
@@ -91,6 +99,8 @@ export default function TickerCard({ result, watchlist, setWatchlist }) {
             </div>
           </div>
         )}
+
+        {/* ⭐ Watchlist Button */}
         <button
           onClick={toggleWatchlist}
           style={{
@@ -128,7 +138,7 @@ export default function TickerCard({ result, watchlist, setWatchlist }) {
         <ScoreBar score={prediction?.predictionScore} />
       </div>
 
-      {/* Stats row */}
+      {/* Stats */}
       <div
         style={{
           display: "flex",
@@ -137,7 +147,9 @@ export default function TickerCard({ result, watchlist, setWatchlist }) {
         }}
       >
         <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
-          <span style={{ color: "#94a3b8", fontWeight: 600 }}>{mentions}</span>{" "}
+          <span style={{ color: "#94a3b8", fontWeight: 600 }}>
+            {mentions}
+          </span>{" "}
           mentions
         </div>
 
@@ -149,11 +161,17 @@ export default function TickerCard({ result, watchlist, setWatchlist }) {
         </div>
 
         <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
-          <span style={{ color: "#4ade80" }}>+{sentiments?.positive || 0}</span>
+          <span style={{ color: "#4ade80" }}>
+            +{sentiments?.positive || 0}
+          </span>
           {" / "}
-          <span style={{ color: "#fde047" }}>{sentiments?.neutral || 0}</span>
+          <span style={{ color: "#fde047" }}>
+            {sentiments?.neutral || 0}
+          </span>
           {" / "}
-          <span style={{ color: "#f87171" }}>-{sentiments?.negative || 0}</span>
+          <span style={{ color: "#f87171" }}>
+            -{sentiments?.negative || 0}
+          </span>
         </div>
       </div>
 
@@ -221,43 +239,16 @@ export default function TickerCard({ result, watchlist, setWatchlist }) {
                 borderRadius: 8,
                 textDecoration: "none",
               }}
-              onClick={(e) => e.stopPropagation()} // prevent toggle when clicking link
+              onClick={(e) => e.stopPropagation()}
             >
               <div
                 style={{
                   fontSize: "0.78rem",
                   color: "#cbd5e1",
                   marginBottom: "0.3rem",
-                  lineHeight: 1.4,
                 }}
               >
                 {post?.title}
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "0.8rem",
-                  fontSize: "0.7rem",
-                  color: "#475569",
-                }}
-              >
-                <span>▲ {post?.score?.toLocaleString?.() || 0}</span>
-
-                <span
-                  style={{
-                    color:
-                      post?.sentiment === "positive"
-                        ? "#4ade80"
-                        : post?.sentiment === "negative"
-                          ? "#f87171"
-                          : "#fde047",
-                  }}
-                >
-                  {post?.sentiment}
-                </span>
-
-                <span style={{ color: "#334155" }}>{post?.reason}</span>
               </div>
             </a>
           ))}
