@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { fetchAnalysis } from "../api";
 import TickerCard from "../components/TickerCard";
 import { useAuth } from "../context/AuthContext";
+import { getWatchlist } from "../api";
+import { useNavigate } from "react-router-dom";
 
 const FILTERS = ["ALL", "STRONG BUY", "BUY", "HOLD", "SELL", "STRONG SELL"];
 
@@ -12,12 +14,19 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("score");
-
+  const [watchlist, setWatchlist] = useState([]);
+  const navigate = useNavigate();
   const { logout } = useAuth();
 
   useEffect(() => {
     loadData();
+    loadWatchlist();
   }, []);
+
+  async function loadWatchlist() {
+  const data = await getWatchlist();
+  setWatchlist(data);
+}
 
   async function loadData() {
     try {
@@ -69,6 +78,25 @@ export default function Dashboard() {
         RedditPulse
       </h1>
     </div>
+
+    <button 
+    style={{
+          padding: "0.55rem 1.2rem",
+          borderRadius: 999,
+          border: "none",
+          cursor: loading ? "not-allowed" : "pointer",
+          fontWeight: 700,
+          fontFamily: "'Syne', sans-serif",
+          fontSize: "0.8rem",
+          background: loading
+            ? "#1e293b"
+            : "linear-gradient(135deg, #f97316, #ef4444)",
+          color: "#fff",
+          opacity: loading ? 0.6 : 1,
+        }}
+    onClick={() => navigate("/watchlist")}>
+  Watchlist
+</button>
 
     {/* Right */}
     <div style={{ display: "flex", gap: "0.6rem" }}>
@@ -133,7 +161,8 @@ export default function Dashboard() {
       {!loading && !error && (
         <div>
           {filtered.map(result => (
-            <TickerCard key={result.ticker} result={result} />
+            <TickerCard key={result.ticker} result={result} watchlist={watchlist}
+  setWatchlist={setWatchlist}/>
           ))}
         </div>
       )}

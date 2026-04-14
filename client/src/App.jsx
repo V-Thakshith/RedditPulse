@@ -4,6 +4,7 @@ import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Watchlist from "./pages/Watchlist";
 
 // 🔐 Protected Route
 function ProtectedRoute({ children }) {
@@ -41,6 +42,15 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+  path="/watchlist"
+  element={
+    <ProtectedRoute>
+      <Watchlist />
+    </ProtectedRoute>
+  }
+/>
 
       {/* Default redirect */}
       <Route

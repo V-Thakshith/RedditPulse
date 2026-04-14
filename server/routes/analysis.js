@@ -13,7 +13,7 @@ const router = express.Router();
 
 let latestAnalysis = null;
 let lastUpdated = null;
-let isRunning = false;
+let isRunning = true;
 
 async function runFullPipeline() {
   console.log("\n═══════════════════════════════");
@@ -71,6 +71,27 @@ await Analysis.create({
 
 return response;
 }
+
+router.get("/history/:ticker", async (req, res) => {
+  const { ticker } = req.params;
+
+  const history = await Analysis.find({
+    "results.ticker": ticker,
+  }).sort({ timestamp: 1 });
+
+  const formatted = history.map(entry => {
+    const match = entry.results.find(r => r.ticker === ticker);
+
+    return {
+      timestamp: entry.timestamp,
+      predictionScore: match?.prediction?.predictionScore,
+      signal: match?.prediction?.signal,
+      price: match?.stock?.price,
+    };
+  });
+
+  res.json(formatted);
+});
 
 router.get("/run", authMiddleware, async (req, res) => {
   try {
@@ -133,18 +154,18 @@ cron.schedule("0 */6 * * *", async () => {
   }
 });
 
-(async () => {
-  console.log(" Initial analysis on startup...");
+// (async () => {
+//   console.log(" Initial analysis on startup...");
 
-  try {
-    const result = await runFullPipeline();
-    latestAnalysis = result;
-    lastUpdated = new Date();
+//   try {
+//     const result = await runFullPipeline();
+//     latestAnalysis = result;
+//     lastUpdated = new Date();
 
-    console.log("Initial analysis ready");
-  } catch (err) {
-    console.error("Initial run failed:", err);
-  }
-})();
+//     console.log("Initial analysis ready");
+//   } catch (err) {
+//     console.error("Initial run failed:", err);
+//   }
+// })();
 
 export default router;

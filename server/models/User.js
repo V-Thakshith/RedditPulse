@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
+    watchlist:{
+        type:[String],
+        default:[],
+    },
 },{timestamps:true});
 
 export default mongoose.model("User",userSchema)

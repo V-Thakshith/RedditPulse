@@ -1,21 +1,26 @@
 import { useState } from "react";
 import SignalBadge from "./SignalBadge";
 import ScoreBar from "./ScoreBar";
-
-export default function TickerCard({ result }) {
+import { addToWatchlist, removeFromWatchlist } from "../api";
+export default function TickerCard({ result, watchlist, setWatchlist }) {
   const [expanded, setExpanded] = useState(false);
+  const isSaved = watchlist?.includes(result.ticker);
 
-  const {
-    ticker,
-    mentions,
-    prediction,
-    stock,
-    topPosts,
-    sentiments,
-  } = result || {};
+  async function toggleWatchlist() {
+    let updated;
 
-  const priceColor =
-    stock?.changePercent >= 0 ? "#4ade80" : "#f87171";
+    if (isSaved) {
+      updated = await removeFromWatchlist(result.ticker);
+    } else {
+      updated = await addToWatchlist(result.ticker);
+    }
+
+    setWatchlist(updated);
+  }
+  const { ticker, mentions, prediction, stock, topPosts, sentiments } =
+    result || {};
+
+  const priceColor = stock?.changePercent >= 0 ? "#4ade80" : "#f87171";
 
   return (
     <div
@@ -28,13 +33,9 @@ export default function TickerCard({ result }) {
         cursor: "pointer",
       }}
       onClick={() => setExpanded((prev) => !prev)}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.borderColor =
-          "rgba(255,255,255,0.12)")
-      }
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#f97316")}
       onMouseLeave={(e) =>
-        (e.currentTarget.style.borderColor =
-          "rgba(255,255,255,0.06)")
+        (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")
       }
     >
       {/* Header */}
@@ -90,6 +91,36 @@ export default function TickerCard({ result }) {
             </div>
           </div>
         )}
+        <button
+          onClick={toggleWatchlist}
+          style={{
+            padding: "0.3rem 0.6rem",
+            borderRadius: 999,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: isSaved
+              ? "linear-gradient(135deg, #f97316, #ef4444)"
+              : "rgba(255,255,255,0.05)",
+            color: isSaved ? "#fff" : "#94a3b8",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            if (!isSaved) {
+              e.target.style.borderColor = "#f97316";
+              e.target.style.color = "#f97316";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isSaved) {
+              e.target.style.borderColor = "rgba(255,255,255,0.08)";
+              e.target.style.color = "#94a3b8";
+            }
+          }}
+        >
+          {isSaved ? "⭐ Saved" : "☆ Save"}
+        </button>
       </div>
 
       {/* Score Bar */}
@@ -106,35 +137,23 @@ export default function TickerCard({ result }) {
         }}
       >
         <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
-          <span
-            style={{ color: "#94a3b8", fontWeight: 600 }}
-          >
-            {mentions}
-          </span>{" "}
+          <span style={{ color: "#94a3b8", fontWeight: 600 }}>{mentions}</span>{" "}
           mentions
         </div>
 
         <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
           Confidence:{" "}
-          <span
-            style={{ color: "#94a3b8", fontWeight: 600 }}
-          >
+          <span style={{ color: "#94a3b8", fontWeight: 600 }}>
             {prediction?.confidence}
           </span>
         </div>
 
         <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
-          <span style={{ color: "#4ade80" }}>
-            +{sentiments?.positive || 0}
-          </span>
+          <span style={{ color: "#4ade80" }}>+{sentiments?.positive || 0}</span>
           {" / "}
-          <span style={{ color: "#fde047" }}>
-            {sentiments?.neutral || 0}
-          </span>
+          <span style={{ color: "#fde047" }}>{sentiments?.neutral || 0}</span>
           {" / "}
-          <span style={{ color: "#f87171" }}>
-            -{sentiments?.negative || 0}
-          </span>
+          <span style={{ color: "#f87171" }}>-{sentiments?.negative || 0}</span>
         </div>
       </div>
 
@@ -147,37 +166,35 @@ export default function TickerCard({ result }) {
           marginBottom: "0.8rem",
         }}
       >
-        {Object.entries(prediction?.breakdown || {}).map(
-          ([key, val]) => (
+        {Object.entries(prediction?.breakdown || {}).map(([key, val]) => (
+          <div
+            key={key}
+            style={{
+              padding: "0.4rem 0.6rem",
+              background: "rgba(255,255,255,0.02)",
+              borderRadius: 8,
+              fontSize: "0.72rem",
+            }}
+          >
             <div
-              key={key}
               style={{
-                padding: "0.4rem 0.6rem",
-                background: "rgba(255,255,255,0.02)",
-                borderRadius: 8,
-                fontSize: "0.72rem",
+                color: "#475569",
+                textTransform: "capitalize",
+                marginBottom: "0.2rem",
               }}
             >
-              <div
-                style={{
-                  color: "#475569",
-                  textTransform: "capitalize",
-                  marginBottom: "0.2rem",
-                }}
-              >
-                {key}
-              </div>
-              <div
-                style={{
-                  color: "#94a3b8",
-                  fontWeight: 600,
-                }}
-              >
-                {val?.label}
-              </div>
+              {key}
             </div>
-          )
-        )}
+            <div
+              style={{
+                color: "#94a3b8",
+                fontWeight: 600,
+              }}
+            >
+              {val?.label}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Expanded posts */}
@@ -225,9 +242,7 @@ export default function TickerCard({ result }) {
                   color: "#475569",
                 }}
               >
-                <span>
-                  ▲ {post?.score?.toLocaleString?.() || 0}
-                </span>
+                <span>▲ {post?.score?.toLocaleString?.() || 0}</span>
 
                 <span
                   style={{
@@ -235,16 +250,14 @@ export default function TickerCard({ result }) {
                       post?.sentiment === "positive"
                         ? "#4ade80"
                         : post?.sentiment === "negative"
-                        ? "#f87171"
-                        : "#fde047",
+                          ? "#f87171"
+                          : "#fde047",
                   }}
                 >
                   {post?.sentiment}
                 </span>
 
-                <span style={{ color: "#334155" }}>
-                  {post?.reason}
-                </span>
+                <span style={{ color: "#334155" }}>{post?.reason}</span>
               </div>
             </a>
           ))}
